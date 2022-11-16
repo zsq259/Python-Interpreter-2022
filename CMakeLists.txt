@@ -7,6 +7,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/generated/
         ${PROJECT_SOURCE_DIR}/third_party/
         ${PROJECT_SOURCE_DIR}/third_party/runtime/src
+        ${PROJECT_SOURCE_DIR}/third_party/runtime/src/support
         ${PROJECT_SOURCE_DIR}/src/
 )
 set(src_dir
@@ -28,7 +29,7 @@ file(GLOB antlr4-cpp-src
 add_library (antlr4-cpp-runtime ${antlr4-cpp-src})
 ### YOU CAN"T MODIFY THE CODE ABOVE
 
-add_executable(code ${src_dir} src/main.cpp src/Evalvisitor.cpp src/utils.cpp) # Add all *.cpp file after src/main.cpp, like src/Evalvisitor.cpp did
+add_executable(code ${src_dir} src/main.cpp src/Evalvisitor.cpp src/utils.cpp src/Scope.cpp) # Add all *.cpp file after src/main.cpp, like src/Evalvisitor.cpp did
 
 ### YOU CAN'T MODIFY THE CODE BELOW
 target_link_libraries(code antlr4-cpp-runtime)

@@ -49,6 +49,7 @@ public:
     virtual antlrcpp::Any visitArith_expr(Python3Parser::Arith_exprContext *ctx) override;
     
     virtual antlrcpp::Any visitTerm(Python3Parser::TermContext *ctx) override;
+    
     virtual antlrcpp::Any visitFactor(Python3Parser::FactorContext *ctx) override;
     
     virtual antlrcpp::Any visitAtom_expr(Python3Parser::Atom_exprContext *ctx) override;

@@ -2,13 +2,13 @@
 #define PYTHON_INTERPRETER_UTILS_H
 
 #include <string>
+#include "Any.h"
 
+int ToInt(const antlrcpp::Any &o);
 
-int stringToInt(const std::string& str);
+double ToFloat(const antlrcpp::Any &o);
 
-double stringToFloat(const std::string& str);
-
-bool stringToBool(const std::string& str);
+bool ToBool(const antlrcpp::Any &o);
 
 bool validateVarName(const std::string& str);
 

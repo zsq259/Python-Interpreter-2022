@@ -3,6 +3,7 @@
 #include "Python3BaseVisitor.h"
 #include "Scope.h"
 #include "utils.h"
+#include "any_op.h"
 
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
     return visitChildren(ctx);
@@ -30,21 +31,49 @@ antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx
     return visitChildren(ctx);
 }
 
-//copied from apple-pie
+// refer to apple-pie
 antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
-    if (ctx->augassign()) {
-    }
     auto testlistArray = ctx->testlist();
+    if (ctx->augassign()) {
+        std::string op = ctx->augassign()->getText();
+        std::string varName = testlistArray[0]->getText();
+        antlrcpp::Any varData = visitTestlist(testlistArray[1]);
+        if (op == "+=") {
+            scope.varRegister(varName, scope.varQuery(varName) + varData);
+        }
+        else if (op == "-=") {
+            scope.varRegister(varName, scope.varQuery(varName) - varData);
+        }
+        else if (op == "*=") {
+            scope.varRegister(varName, scope.varQuery(varName) * varData);
+        }
+        else if (op == "/=") {
+            scope.varRegister(varName, scope.varQuery(varName) / varData);
+        }
+        else if (op == "//=") {
+            scope.varRegister(varName, int_div(scope.varQuery(varName), varData));
+        }
+        else if (op == "%=") {
+            scope.varRegister(varName, scope.varQuery(varName) % varData);
+        }
+    }
     if (testlistArray.size() == 1) {
         visitTestlist(testlistArray[0]);
         return 0;
     }
     else if (testlistArray.size() > 2) {
+        int tmp = testlistArray.size();
+        antlrcpp::Any varData = visitTestlist(testlistArray[tmp - 1]);
+        for (int i = tmp - 2; i >= 0; i--) {
+            std::string varName = testlistArray[i]->getText();
+            scope.varRegister(varName, varData);        
+        }
     }
-    
-    std::string varName = testlistArray[0]->getText();
-    antlrcpp::Any varData = visitTestlist(testlistArray[1]);
-    scope.varRegister(varName, varData);
+    else {
+        std::string varName = testlistArray[0]->getText();
+        antlrcpp::Any varData = visitTestlist(testlistArray[1]);
+        scope.varRegister(varName, varData);
+    }
     return 0;
 }
 
@@ -74,6 +103,7 @@ antlrcpp::Any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
 
 antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
     auto andArray = ctx->and_test();
+    if(andArray.size() == 1) return visitAnd_test(andArray[0]);
     for (int i = 0; i < andArray.size(); ++i) {
         antlrcpp::Any ret = visitAnd_test(andArray[i]);
         if(ret.is<bool>() && ret.as<bool>() == true) return true;
@@ -84,6 +114,7 @@ antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
 
 antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
     auto notArray = ctx->not_test();
+    if(notArray.size() == 1) return visitNot_test(notArray[0]);
     for (int i = 0; i < notArray.size(); ++i) {
         antlrcpp::Any ret = visitNot_test(notArray[i]);
         if(ret.is<bool>() && ret.as<bool>() == false) return false;
@@ -110,147 +141,86 @@ antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx
     for (int i = 1; i < arithArray.size(); ++i) {
         std::string tmpOp = opArray[i-1]->getText();
         antlrcpp::Any tem = visitArith_expr(arithArray[i]);
-        if (tmpOp == "<") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() >= tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() >= tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() >= tem.as<std::string>())) return false; 
-        }
-        else if (tmpOp == ">") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() <= tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() <= tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() <= tem.as<std::string>())) return false; 
-        }
-        else if (tmpOp == "==") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() != tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() != tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() != tem.as<std::string>())) return false; 
-        }
-        else if (tmpOp == ">=") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() < tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() < tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() < tem.as<std::string>())) return false; 
-        }
-        else if (tmpOp == "<=") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() > tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() > tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() > tem.as<std::string>())) return false; 
-        }
-        else if (tmpOp == "!=") {
-            if (ret.is<int>() && tem.is<int>() && (ret.as<int>() == tem.as<int>())) return false;
-            else if (ret.is<float>() && tem.is<float>() && (ret.as<float>() == tem.as<float>())) return false;
-            else if (ret.is<std::string>() && tem.is<std::string>() && (ret.as<std::string>() == tem.as<std::string>())) return false; 
-        }
+        if (tmpOp == "<") { if (ret >= tem) return false; }
+        else if (tmpOp == ">") { if (ret <= tem) return false; }
+        else if (tmpOp == "==") { if (ret != tem) return false; }
+        else if (tmpOp == ">=") { if (ret < tem) return false; }
+        else if (tmpOp == "<=") { if (ret > tem) return false; }
+        else if (tmpOp == "!=") { if (ret == tem) return false; }
         ret = tem;
     }
     return true;
     //return visitChildren(ctx);
 }
 
-//copied from apple-pie  and   11.16 upd
+// refer to apple-pie  and   11.17 upd
 antlrcpp::Any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
     auto termArray = ctx->term();
     if (termArray.size() == 1) return visitTerm(termArray[0]);
     auto opArray = ctx->addorsub_op();
-    int is_int = 1, is_float = 0;
     std::vector<antlrcpp::Any> Array;
     for (int i = 0; i < termArray.size(); ++i) Array.push_back(visitTerm(termArray[i]));
-    for (int i = 0; i < termArray.size(); ++i) {
-        if (!Array[i].is<int>()) is_int = 0;
-        if (Array[i].is<double>()) is_float = 1;
+    antlrcpp::Any ret = Array[0];
+    for (int i = 1; i < termArray.size(); ++i) {
+        std::string tmpOp = opArray[i-1]->getText();
+        if (tmpOp == "+") ret = ret + Array[i];
+        else ret = ret - Array[i];
     } 
-    if (is_int) {
-        int ret = Array[0].as<int>();
-        for (int i = 1; i < termArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "+") ret += Array[i].as<int>();
-            else if (tmpOp == "-") ret -= Array[i].as<int>();
-        }
-        return ret;
-    }
-    else if (is_float) {
-        double ret = Array[0].as<double>();
-        for (int i = 1; i < termArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "+") ret += Array[i].as<double>();
-            else if (tmpOp == "-") ret -= Array[i].as<double>();
-        }
-        return ret;
-    }
-    else {
-        std::string ret = Array[0].as<std::string>();
-        for (int i = 1; i < termArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "+") ret += Array[i].as<std::string>();
-        }
-        return ret;
-    }
+    return ret;
 }
 
-//copied from apple-pie    and    11.16 upd
+// refer to apple-pie    and    11.17 upd
 antlrcpp::Any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
     auto factorArray = ctx->factor();
     if (factorArray.size() == 1) return visitFactor(factorArray[0]);
     std::vector<antlrcpp::Any> Array;
     auto opArray = ctx->muldivmod_op();
     for (int i = 0; i < factorArray.size(); ++i) Array.push_back(visitFactor(factorArray[i]));
-    int is_int = 1, is_float = 0;
-    for (int i = 0; i < factorArray.size(); ++i) {
-        if (!Array[i].is<int>()) is_int = 0;
-        if (Array[i].is<double>()) is_float = 1;
-        if (i && opArray[i-1]->getText() == "/") is_int = 0, is_float = 1;
+    antlrcpp::Any ret = Array[0];
+    for (int i = 1; i < factorArray.size(); ++i) {
+        std::string tmpOp = opArray[i-1]->getText();
+        if (tmpOp == "*") ret = ret * factorArray[i];
+        else if (tmpOp == "/") ret = ret / factorArray[i];
+        else if (tmpOp == "//") ret = int_div(ret, factorArray[i]);
+        else if (tmpOp == "%") ret = ret % factorArray[i];
     }
-    if (is_int) {
-        int ret = Array[0].as<int>();
-        for (int i = 1; i < factorArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "*") ret *= Array[i].as<int>();
-            else if(tmpOp == "//") ret /= Array[i].as<int>();
-            else if(tmpOp == "%") ret %= Array[i].as<int>();
-        }
-        return ret;
-    }
-    else if (is_float) {
-        double ret = Array[0].as<double>();
-        for (int i = 1; i < factorArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "*") ret *= Array[i].as<double>();
-            else if(tmpOp == "/") ret /= Array[i].as<double>();
-        }
-        return ret;
-    }
-    else {
-        std::string ret = Array[0].as<std::string>();
-        for (int i = 1; i < factorArray.size(); ++i) {
-            std::string tmpOp = opArray[i-1]->getText();
-            if (tmpOp == "*") {
-                int tmp = Array[i].as<int>();
-                while (tmp) ret += ret; 
-            }
-        }
-        return ret;
-    }
+    return ret;
 }
 
-//copied from apple-pie
+// refer to apple-pie
 antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     return visitChildren(ctx);
 }
 
-//copied from apple-pie
+// refer to apple-pie and 11.17 upd
 antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
     if (!ctx->trailer()) return visitAtom(ctx->atom());
+    auto functionName = ctx->atom()->getText();
+    auto argsArray = visitTrailer(ctx->trailer()).as<std::vector<antlrcpp::Any> >();
+    if (functionName == "print") {
+        for (int i = 0; i < argsArray.size(); ++i) {
+            
+            if(argsArray[i].is<double>()) printf("%.6lf ",argsArray[i].as<double>());
+            else std::cout<<argsArray[i]<<" ";
+        }
+        std::cout<<"\n";
+        return 0;
+    }
 }
 
-//copied from apple-pie
+// refer to apple-pie
 antlrcpp::Any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
     if (ctx->arglist()) return visitArglist(ctx->arglist());
-    return std::vector<int>();
+    return std::vector<antlrcpp::Any>();
 }
 
-//copied from apple-pie   and   changed
+// refer to apple-pie   and   11.17upd
 antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     if (ctx->NUMBER()) {
-        return (ctx->NUMBER()->getText());
+        std::string str = ctx->NUMBER()->getText();
+
+        if (str.find(".") == std::string::npos) return std::stoi(str);
+        else return std::stod(str);
     }
     else if (ctx->NAME()) {
         auto result = scope.varQuery(ctx->NAME()->getText());
@@ -258,19 +228,31 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
             return result.second;
         }
     }
+    else if (ctx->TRUE()) return true;
+    else if (ctx->FALSE()) return false;
     else if (ctx->test()) return visitTest(ctx->test());
+    else {
+        auto stringArray = ctx->STRING();
+        std::string ret = "";
+        for (int i = 0; i < stringArray.size(); ++i) {
+            std::string tem = stringArray[i]->getText();
+            tem = tem.substr(1, tem.size() - 2);
+            ret = ret + tem;
+        }
+        return ret;
+    }
 }
 
 antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
     return visitChildren(ctx);
 }
 
-//copied from apple-pie
+// refer to apple-pie  ans   11.17 upd
 antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
     auto argumentArray = ctx->argument();
-    std::vector<int> retArray;
-    for (auto ctx : argumentArray) {
-        retArray.push_back(visitTest(ctx->test()[0]));
+    std::vector<antlrcpp::Any> retArray;
+    for (int i = 0; i < argumentArray.size(); ++i) {
+        retArray.push_back(visitArgument(argumentArray[i]));
     }
     return retArray;
 }

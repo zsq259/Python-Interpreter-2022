@@ -3,8 +3,10 @@
 
 #include <string>
 #include "Any.h"
+#include "int2048.h"
+using sjtu::int2048;
 
-int ToInt(const antlrcpp::Any &o);
+int2048 ToInt(const antlrcpp::Any &o);
 
 double ToFloat(const antlrcpp::Any &o);
 

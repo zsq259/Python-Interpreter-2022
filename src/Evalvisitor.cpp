@@ -4,6 +4,8 @@
 #include "Scope.h"
 #include "utils.h"
 #include "any_op.h"
+#include "int2048.h"
+using sjtu::int2048;
 
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
     return visitChildren(ctx);
@@ -199,7 +201,6 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
     auto argsArray = visitTrailer(ctx->trailer()).as<std::vector<antlrcpp::Any> >();
     if (functionName == "print") {
         for (int i = 0; i < argsArray.size(); ++i) {
-            
             if(argsArray[i].is<double>()) printf("%.6lf ",argsArray[i].as<double>());
             else std::cout<<argsArray[i]<<" ";
         }
@@ -219,7 +220,7 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     if (ctx->NUMBER()) {
         std::string str = ctx->NUMBER()->getText();
 
-        if (str.find(".") == std::string::npos) return std::stoi(str);
+        if (str.find(".") == std::string::npos) return int2048(str);
         else return std::stod(str);
     }
     else if (ctx->NAME()) {

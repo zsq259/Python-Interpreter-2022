@@ -1,12 +1,14 @@
 #include "utils.h"
 #include "Any.h"
+#include "int2048.h"
+using sjtu::int2048;
 
-int ToInt(const antlrcpp::Any &o) {
-    if (o.is<int>()) return o.as<int>();
+int2048 ToInt(const antlrcpp::Any &o) {
+    if (o.is<int2048>()) return o.as<int2048>();
     if (o.is<bool>()) return o.as<bool>() == true? 1:0;
     if (o.is<double>()) return o.as<double>();
     if (o.is<std::string>()) {
-        int ret = 0;
+        int2048 ret = 0;
         std::string str = o.as<std::string>();
         for (const auto& ch : str) {
             ret = ret * 10 + ch - '0';
@@ -18,7 +20,15 @@ int ToInt(const antlrcpp::Any &o) {
 
 double ToFloat(const antlrcpp::Any &o) {
     if (o.is<double>()) return o.as<double>();
-    if (o.is<int>()) return o.as<int>();
+    if (o.is<int2048>()) {
+        int2048 tem = o.as<int2048>();
+        double ret = 0;
+        for(int i = tem.num.size() - 1; i >= 0; --i) {
+            ret = ret * 100 + tem.num[i];
+        }
+        ret *= tem.sign;
+        return ret;
+    }
     if (o.is<bool>()) return o.as<bool>() == true? 1.0:0.0;
     if (o.is<std::string>()) {
         std::string str = o.as<std::string>();
@@ -36,7 +46,7 @@ double ToFloat(const antlrcpp::Any &o) {
 
 bool ToBool(const antlrcpp::Any &o) {
     if (o.is<bool>()) return o.as<bool>();
-    if (o.is<int>()) return o.as<int>();
+    if (o.is<int2048>()) return o.as<int2048>().sign;
     if (o.is<double>()) return o.as<double>();
     if (o.is<std::string>()) return o.as<std::string>().size()? true:false;
     return 0;

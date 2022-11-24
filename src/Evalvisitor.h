@@ -5,6 +5,7 @@
 #include "Python3BaseVisitor.h"
 #include "Scope.h"
 #include "utils.h"
+#include "int2048.h"
 
 class EvalVisitor: public Python3BaseVisitor {
 

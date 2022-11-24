@@ -10,6 +10,8 @@ int2048 ToInt(const antlrcpp::Any &o);
 
 double ToFloat(const antlrcpp::Any &o);
 
+std::string ToString(const antlrcpp::Any &o);
+
 bool ToBool(const antlrcpp::Any &o);
 
 bool validateVarName(const std::string& str);

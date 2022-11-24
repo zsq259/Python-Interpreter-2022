@@ -304,8 +304,8 @@ namespace sjtu{
         int o = sign * b.sign;
         sign = sign > 0? sign : -sign;
         b.sign = b.sign > 0? b.sign : -b.sign;
-        
         int2048 x = (*this), y = b;
+        if (o < 0) x += y - 1;
         int l1 = num.size(), l2 = b.num.size();
         if (l1 > (l2 << 1)) {
             int tmp = l1 - (l2 << 1) ;

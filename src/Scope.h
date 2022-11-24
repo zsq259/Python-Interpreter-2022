@@ -10,10 +10,10 @@ class Scope {
 
     private:
         //std::vector< std::unordered_map<std::string, antlrcpp::Any> > varTable;
-        std::unordered_map<std::string, antlrcpp::Any> varTable;
+        std::vector<std::unordered_map<std::string, antlrcpp::Any> > varTable;
 
     public:
-        Scope(): varTable() {}
+        Scope();
         void varRegister(const std::string& varName, antlrcpp::Any varData);
         std::pair<bool, antlrcpp::Any> varQuery(const std::string& varName) const;
 };

@@ -88,7 +88,12 @@ antlrcpp::Any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContex
 }
 
 antlrcpp::Any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
-    return visitChildren(ctx);
+    auto testArray = ctx->test();
+    auto suiteArray = ctx->suite();
+    for (int i = 0; i < testArray.size(); ++i) {
+        if (visitTest(testArray[i]).as<bool>()) return visitSuite(suiteArray[i]);
+    }
+    if(testArray.size() < suiteArray.size()) return visitSuite(suiteArray.back());
 }
 
 antlrcpp::Any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {

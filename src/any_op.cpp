@@ -6,6 +6,10 @@
 #include "int2048.h"
 using sjtu::int2048;
 
+void transVar(antlrcpp::Any &a) {
+    if (a.is<std::pair<std::string, antlrcpp::Any> >()) a = a.as<std::pair<std::string, antlrcpp::Any> >().second;
+}
+
 std::ostream& operator<<(std::ostream &os, const antlrcpp::Any &a) {
     if (a.is<bool>()) os<<(a.as<bool>()? "True":"False");
     if (a.is<int2048>()) os<<a.as<int2048>();

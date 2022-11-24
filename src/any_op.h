@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "int2048.h"
 
+void transVar(antlrcpp::Any &a);
 antlrcpp::Any operator +(const antlrcpp::Any &a, const antlrcpp::Any &b);
 antlrcpp::Any operator -(const antlrcpp::Any &a, const antlrcpp::Any &b);
 antlrcpp::Any operator *(const antlrcpp::Any &a, const antlrcpp::Any &b);

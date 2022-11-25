@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-Scope::Scope(){
+Scope::Scope() {
     std::unordered_map<std::string, antlrcpp::Any> ret;
     varTable.push_back(ret);
 }
@@ -12,6 +12,15 @@ Scope::Scope(){
 void Scope::varRegister(const std::string& varName, antlrcpp::Any varData) {
     (varTable.back())[varName] = varData;
 }    
+
+void Scope::newScope() {
+    std::unordered_map<std::string, antlrcpp::Any> ret;
+    varTable.push_back(ret);
+}
+
+void Scope::delScope() {
+    if(!varTable.empty()) varTable.pop_back();
+}
 
 std::pair<bool, antlrcpp::Any> Scope::varQuery(const std::string& varName) const {
     auto it = (varTable.back()).find(varName);

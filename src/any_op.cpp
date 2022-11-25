@@ -11,10 +11,12 @@ void transVar(antlrcpp::Any &a) {
 }
 
 std::ostream& operator<<(std::ostream &os, const antlrcpp::Any &a) {
-    if (a.is<bool>()) os<<(a.as<bool>()? "True":"False");
-    if (a.is<int2048>()) os<<a.as<int2048>();
-    if (a.is<double>()) os<<a.as<double>();
-    if (a.is<std::string>()) os<<a.as<std::string>();
+    if (a.is<std::pair<std::string, antlrcpp::Any> >()) os << a.as<std::pair<std::string, antlrcpp::Any> >().second;
+    else if (a.is<bool>()) os<<(a.as<bool>()? "True":"False");
+    else if (a.is<int2048>()) os<<a.as<int2048>();
+    else if (a.is<double>()) os<<a.as<double>();
+    else if (a.is<std::string>()) os<<a.as<std::string>();
+    else if (a.isNull()) os<<"None";
     return os;
 }
 

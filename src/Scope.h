@@ -14,6 +14,8 @@ class Scope {
 
     public:
         Scope();
+        void newScope();
+        void delScope();
         void varRegister(const std::string& varName, antlrcpp::Any varData);
         std::pair<bool, antlrcpp::Any> varQuery(const std::string& varName) const;
 };

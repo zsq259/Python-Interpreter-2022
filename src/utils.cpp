@@ -62,6 +62,7 @@ std::string ToString(const antlrcpp::Any &o) {
     if (o.is<bool>()) {
         return o.as<bool>()? "True" : "False";
     }
+    return "";
 }
 
 bool ToBool(const antlrcpp::Any &o) {

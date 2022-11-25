@@ -6,19 +6,35 @@
 #include "any_op.h"
 #include "int2048.h"
 using sjtu::int2048;
+using std::make_pair;
 
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
     return visitChildren(ctx);
 }
 
 antlrcpp::Any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
-    // no func def
-    return visitChildren(ctx);
+    std::string varName = ctx->NAME()->getText();
+    std::vector< std::pair<std::string, antlrcpp::Any> > ret = visitParameters(ctx->parameters());
+    auto Suite = ctx->suite();
+    scope.varRegister(varName, make_pair(ret, Suite));
+    return {};
 }
 
 antlrcpp::Any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
     // no func def
-    return visitChildren(ctx);
+    std::vector< std::pair<std::string, antlrcpp::Any> > ret; 
+    if (!ctx->typedargslist()) return ret;
+    auto tfpdefArray = ctx->typedargslist()->tfpdef();
+    auto testArray = ctx->typedargslist()->test();
+    int tem = tfpdefArray.size() - testArray.size();
+    for (int i = 0; i < tfpdefArray.size(); ++i) {
+        std::string varName = tfpdefArray[i]->NAME()->getText();
+        antlrcpp::Any varData;
+        if (i >= tem) varData = visitTest(testArray[i-tem]);
+        else varData = {};
+        ret.push_back(make_pair(varName, varData));
+    }
+    return std::move(ret);
 }
 
 antlrcpp::Any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
@@ -70,19 +86,9 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     }
     else {
         int tmp = testlistArray.size();
-        //antlrcpp::Any varData = visitTestlist(testlistArray[tmp - 1]);
         std::vector< std::vector<antlrcpp::Any> > Array;
         for (int i = 0; i < tmp; ++i) {
             antlrcpp::Any ret = visitTestlist(testlistArray[i]);
-            //std::cout<<"size="<<ret.size()<<"\n";
-            /*
-            auto testArray = testlistArray[i]->test();
-            for (int j = 0; j < testArray.size(); ++j) {
-                std::cout<<"j="<<j<<"\n";
-                //ret.push_back(
-                visitTest(testArray[j]);
-            }
-            */
             if (ret.is<std::vector<antlrcpp::Any> >()) Array.push_back(ret.as<std::vector<antlrcpp::Any> >());
             else {
                 std::vector<antlrcpp::Any> tem;
@@ -101,21 +107,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
                 scope.varRegister(varName, varData);        
             }
         }
-        /*
-
-        for (int i = tmp - 2; i >= 0; i--) {
-            std::string varName = testlistArray[i]->getText();
-            scope.varRegister(varName, varData);        
-        }
-        */
     }
-    /*
-    else {
-        std::string varName = testlistArray[0]->getText();
-        antlrcpp::Any varData = visitTestlist(testlistArray[1]);
-        scope.varRegister(varName, varData);
-    }
-    */
     return 0;
 }
 
@@ -293,18 +285,33 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
         std::cout<<"\n";
         return 0;
     }
-    if (functionName == "int") {
+    else if (functionName == "int") {
         return ToInt(argsArray[0]);
     }
-    if (functionName == "float") {
+    else if (functionName == "float") {
         return ToFloat(argsArray[0]);
     }
-    if (functionName == "str") {
+    else if (functionName == "str") {
         return ToString(argsArray[0]);
     }
-    if (functionName == "bool") {
+    else if (functionName == "bool") {
         return ToBool(argsArray[0]);
     }
+    else {
+        std::pair<std::vector< std::pair<std::string, antlrcpp::Any> >, Python3Parser::SuiteContext*> varData = scope.varQuery(functionName).second;
+        std::vector< std::pair<std::string, antlrcpp::Any> > ret = varData.first;
+        auto Suite = varData.second;
+        scope.newScope();
+        for (int i = 0; i < ret.size(); i++) {
+            antlrcpp::Any Data = ret[i].second;
+            if (i < argsArray.size()) Data = argsArray[i];
+            scope.varRegister(ret[i].first, Data);
+        }
+        //puts("ok");
+        visitSuite(Suite);
+        scope.delScope();
+    }
+    return {};
 }
 
 // refer to apple-pie
@@ -330,6 +337,7 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     }
     else if (ctx->TRUE()) return true;
     else if (ctx->FALSE()) return false;
+    else if (ctx->NONE()) return {};
     else if (ctx->test()) return visitTest(ctx->test());
     else {
         auto stringArray = ctx->STRING();

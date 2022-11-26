@@ -10,7 +10,9 @@ Scope::Scope() {
 }
 
 void Scope::varRegister(const std::string& varName, antlrcpp::Any varData) {
-    (varTable.back())[varName] = varData;
+    if(varTable.back().find(varName) != varTable.back().end()) (varTable.back())[varName] = varData;
+    else if(varTable.front().find(varName) != varTable.front().end()) (varTable.front())[varName] = varData;
+    else (varTable.back())[varName] = varData;
 }    
 
 void Scope::newScope() {

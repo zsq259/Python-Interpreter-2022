@@ -71,6 +71,9 @@ public:
   int2048 &operator/=(int2048 b);
   friend int2048 operator/(int2048 a, const int2048 &b);
 
+  int2048 &operator%=(const int2048 &b);
+  friend int2048 operator%(const int2048 &a, const int2048 &b);
+
   friend std::istream &operator>>(std::istream &a, int2048 &b);
   friend std::ostream &operator<<(std::ostream &a, const int2048 &b);
 

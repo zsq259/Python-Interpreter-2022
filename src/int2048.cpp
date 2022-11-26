@@ -20,9 +20,10 @@ namespace sjtu{
         while(x) num.push_back(x % P), x /= P;
     }
 
-    void del_0(std::vector<int> &a) {
-        int len = a.size() - 1;
-        while (len >= 0 && !a[len]) a.pop_back(), --len;
+    void del_0(int2048 &a) {
+        int len = a.num.size() - 1;
+        while (len >= 0 && !a.num[len]) a.num.pop_back(), --len;
+        if (!a.num.size()) a.sign = 0;
     }
 
     int2048::int2048(const std::string &s) {
@@ -37,7 +38,7 @@ namespace sjtu{
             if (tmp >= P) tmp = 1, num.push_back(ret), ret = 0;
         }
         if(ret) num.push_back(ret);
-        del_0(num);
+        del_0((*this));
         if(!sign && o) sign = 1;
     }
 
@@ -65,7 +66,7 @@ namespace sjtu{
             if (tmp >= P) tmp = 1, num.push_back(ret), ret = 0;
         }
         if(ret) num.push_back(ret);
-        del_0(num);
+        del_0(*this);
         if(!sign && o) sign = 1;
     }
 
@@ -103,7 +104,7 @@ namespace sjtu{
     }
 
     int2048 add(int2048 a, const int2048 &b){
-        return a.add(b);
+        return std::move(a.add(b));
     }
 
     int2048 minus(int2048 a, const int2048 &b);
@@ -142,11 +143,11 @@ namespace sjtu{
                 if (num[i] < 0) num[i] += P, ret++;
             }
         }
-        del_0(num);
+        del_0(*this);
         return (*this);
     }
     int2048 minus(int2048 a, const int2048 &b){
-        return a.minus(b);
+        return std::move(a.minus(b));
     }
 
     int2048 &int2048::operator=(const int2048 &s){
@@ -168,13 +169,13 @@ namespace sjtu{
         return *this;
     }
     int2048 operator-(int2048 a, const int2048 &b){
-        return a.minus(b);
+        return std::move(a.minus(b));
     }
 
     long long fpow(long long a, int b) {
         long long ret = 1;
         while (b) { if(b & 1) ret = ret * a % Mod; a = a * a %Mod; b >>= 1; }
-        return ret;
+        return std::move(ret);
     }
 
     void ntt(int *a, const int &op, int m, int *r) {
@@ -193,6 +194,14 @@ namespace sjtu{
         }
     }
 
+    long long toLonglong(const int2048 &a) {
+        long long x = 0, f = a.sign;
+        for (int i = a.num.size() - 1; i >= 0; i--) {
+            x = x * P + a.num[i];
+        }
+        return std::move(f * x);
+    }
+
     int2048 &int2048::operator*=(const int2048 &b){
         if (!sign) return (*this);
         if (!b.sign) {
@@ -200,8 +209,13 @@ namespace sjtu{
             num.clear();
             return (*this);
         }
-        sign *= b.sign;
         int l1 = num.size(), l2 = b.num.size();
+        /*
+        if (l1 <= 4 && l2 <= 4) {
+            return (*this) = int2048(toLonglong(*this) * toLonglong(b));
+        }
+        */
+        sign *= b.sign;
         int n = 1, o = 0;
         while (n < (l1 + l2)) n <<= 1, ++o;
         int *r = new int[n+1];
@@ -222,14 +236,14 @@ namespace sjtu{
         }
         num.clear();
         for (int i = 0; i <= n; ++i) num.push_back(f[i]);
-        del_0(num);
+        del_0(*this);
         delete []r;
         delete []f;
         delete []g;
         return (*this);
     }
     int2048 operator*(int2048 a, const int2048 &b){
-        return a *= b;
+        return std::move(a *= b);
     }
 
     int2048 &int2048::operator<<=(int o) {
@@ -267,12 +281,12 @@ namespace sjtu{
             if (tmp <= ret) ret -= tmp, tem += s[len];
             len--;
         }
-        return tem;
+        return std::move(tem);
     }
 
     int2048 inverse(const int2048 &a) {
         int m = a.num.size();
-        if (m <= 10) {
+        if (m <= 9) {
             return div(int2048(1) <<= (m << 1), a); 
         }
         int k = (m + 5) >> 1;
@@ -293,20 +307,26 @@ namespace sjtu{
         //while (c < int2048(0)) d -= int2048(1), c += a;
         if (c >= a) d += int2048(1);
         //if (c < 0) d -= int2048(1);
-        return d;
+        return std::move(d);
     }
 
     int2048 &int2048::operator/=(int2048 b){
-        if (num.size() < b.num.size()) {
-            (*this) = int2048(0);
+        int l1 = num.size(), l2 = b.num.size();
+        if (l1 < l2) {
+            (*this) = int2048(0 - (sign*b.sign < 0));
             return (*this);
+        }
+        if (l1 <= 9 && l2 <= 9) {
+            long long xx = toLonglong(*this);
+            long long yy = toLonglong(b);
+            if (sign * b.sign < 0) xx -= (yy > 0? yy - 1 : yy + 1);
+            return (*this) = int2048(xx / yy);
         }
         int o = sign * b.sign;
         sign = sign > 0? sign : -sign;
         b.sign = b.sign > 0? b.sign : -b.sign;
         int2048 x = (*this), y = b;
-        if (o < 0) x += y - 1;
-        int l1 = num.size(), l2 = b.num.size();
+        if (o < 0) x += y - int2048(1);
         if (l1 > (l2 << 1)) {
             int tmp = l1 - (l2 << 1) ;
             x <<= tmp;
@@ -327,8 +347,18 @@ namespace sjtu{
         sign = o;
         return (*this);
     }
-    int2048 operator/(int2048 a, const int2048 &b){
-        return a /= b;
+    int2048 operator/(int2048 a, const int2048 &b) {
+        return std::move(a /= b);
+    }
+
+    int2048 &int2048::operator%=(const int2048 &b) {
+        (*this) = (*this) % b;
+        return (*this);
+    }
+    int2048 operator%(const int2048 &a, const int2048 &b) {
+        int2048 ret = a - (a / b) * b;
+        del_0(ret);
+        return std::move(ret);
     }
 
     std::istream &operator>>(std::istream &is, int2048 &a){

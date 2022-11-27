@@ -76,11 +76,10 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
         else if (op == "%=") {
             scope.varRegister(varName, scope.varQuery(varName).second % varData);
         }
-        return 0;
+        return make_pair(varName, varData);
     }
     if (testlistArray.size() == 1) {
-        visitTestlist(testlistArray[0]);
-        return 0;
+        return visitTestlist(testlistArray[0]);
     }
     else {
         int tmp = testlistArray.size();
@@ -101,9 +100,11 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
                 varName = varName.as<std::pair<std::string, antlrcpp::Any> >().first;
                 antlrcpp::Any varData = Array[i-1][j];
                 transVar(varData);
-                scope.varRegister(varName, varData);        
+                scope.varRegister(varName, varData);
+                Array[i][j] = varData;        
             }
         }
+        return Array[tmp-1][0];
     }
     return 0;
 }
@@ -174,7 +175,7 @@ antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
             }
         }
     }
-    return 0;
+    return {};
 }
 
 antlrcpp::Any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
@@ -310,18 +311,22 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
             else std::cout<<argsArray[i]<<" ";
         }
         std::cout<<"\n";
-        return 0;
+        return {};
     }
     else if (functionName == "int") {
+        transVar(argsArray[0]);
         return ToInt(argsArray[0]);
     }
     else if (functionName == "float") {
+        transVar(argsArray[0]);
         return ToFloat(argsArray[0]);
     }
     else if (functionName == "str") {
+        transVar(argsArray[0]);
         return ToString(argsArray[0]);
     }
     else if (functionName == "bool") {
+        transVar(argsArray[0]);
         return ToBool(argsArray[0]);
     }
     else {

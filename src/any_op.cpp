@@ -22,56 +22,66 @@ std::ostream& operator<<(std::ostream &os, const antlrcpp::Any &a) {
 
 antlrcpp::Any operator +(const antlrcpp::Any &a, const antlrcpp::Any &b) {
     if (a.is<std::string>() && b.is<std::string>()) return a.as<std::string>() + b.as<std::string>();
-    if (a.is<double>() || b.is<double>()) return ToFloat(a) + ToFloat(b);
-    return ToInt(a) + ToInt(b);
-    return 0;
+    if (a.is<double>() || b.is<double>()) return std::move(ToFloat(a) + ToFloat(b));
+    return std::move(ToInt(a) + ToInt(b));
 }
 
 antlrcpp::Any operator -(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if(a.is<double>() || b.is<double>()) return ToFloat(a) - ToFloat(b);
-    return ToInt(a) - ToInt(b);
-    return 0;
+    if(a.is<double>() || b.is<double>()) return std::move(ToFloat(a) - ToFloat(b));
+    return std::move(ToInt(a) - ToInt(b));
 }
 
 antlrcpp::Any operator *(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if(a.is<std::string>() && b.is<int2048>()){
+    if(a.is<std::string>()){
         std::string ret = "";
-        int2048 tem = b.as<int2048>();
+        int2048 tem = ToInt(b);
         while(tem > 0) ret += a.as<std::string>(), tem = tem - 1;
-        return ret;
+        return std::move(ret);
     }
-    if(a.is<double>() || b.is<double>()) return ToFloat(a) * ToFloat(b);
-    return ToInt(a) * ToInt(b);
-    return 0;
+    if(b.is<std::string>()){
+        std::string ret = "";
+        int2048 tem = ToInt(a);
+        while(tem > 0) ret += b.as<std::string>(), tem = tem - 1;
+        return std::move(ret);
+    }
+    if(a.is<double>() || b.is<double>()) return std::move(ToFloat(a) * ToFloat(b));
+    return std::move(ToInt(a) * ToInt(b));
 }
 
 antlrcpp::Any operator /(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    return ToFloat(a) / ToFloat(b);
-    return 0;
+    return std::move(ToFloat(a) / ToFloat(b));
 }
 
 antlrcpp::Any operator %(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if(a.is<int2048>() && b.is<int2048>()) return a.as<int2048>() % b.as<int2048>();
-    return 0;
+    return std::move(ToInt(a) % ToInt(b));
 }
 
 antlrcpp::Any int_div(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if(a.is<int2048>() && b.is<int2048>()) return a.as<int2048>() / b.as<int2048>();
-    return 0;
+    return std::move(ToInt(a) / ToInt(b));
 }
 
 bool operator ==(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if (a.is<int2048>() && b.is<int2048>()) return a.as<int2048>() == b.as<int2048>();
-    if (a.is<double>() && b.is<double>()) return a.as<double>() == b.as<double>();
+    if (a.isNull() || b.isNull()) {
+        if (a.isNull() && b.isNull()) return true;
+        else return false;
+    }
+
+    /*
+    if (a.is<bool>() || b.is<bool>()) return ToBool(a) == ToBool(b);
+    */
+    
     if (a.is<std::string>() && b.is<std::string>()) return a.as<std::string>() == b.as<std::string>();
-    return 0;
+    else if (a.is<std::string>() || b.is<std::string>()) return false;
+    if (a.is<bool>() && b.is<bool>()) return ToBool(a) == ToBool(b);
+    
+    if (a.is<double>() || b.is<double>()) return ToFloat(a) == ToFloat(b);
+    return ToInt(a) == ToInt(b);
 }
 
 bool operator <(const antlrcpp::Any &a, const antlrcpp::Any &b) {
-    if (a.is<int2048>() && b.is<int2048>()) return a.as<int2048>() < b.as<int2048>();
-    if (a.is<double>() && b.is<double>()) return a.as<double>() < b.as<double>();
     if (a.is<std::string>() && b.is<std::string>()) return a.as<std::string>() < b.as<std::string>();
-    return 0;
+    if (a.is<double>() || b.is<double>()) return ToFloat(a) < ToFloat(b);
+    return ToInt(a) < ToInt(b);
 }
 
 bool operator <=(const antlrcpp::Any &a, const antlrcpp::Any &b) {
@@ -87,5 +97,9 @@ bool operator >=(const antlrcpp::Any &a, const antlrcpp::Any &b) {
 }
 
 bool operator !=(const antlrcpp::Any &a, const antlrcpp::Any &b) {
+    if (a.isNull() || b.isNull()) {
+        if (a.isNull() && b.isNull()) return false;
+        else return true;
+    }
     return !(a == b);
 }

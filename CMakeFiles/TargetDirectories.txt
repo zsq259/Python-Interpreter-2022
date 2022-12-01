@@ -1,0 +1,4 @@
+/home/zsq259/home/Python-Interpreter-2022/CMakeFiles/antlr4-cpp-runtime.dir
+/home/zsq259/home/Python-Interpreter-2022/CMakeFiles/code.dir
+/home/zsq259/home/Python-Interpreter-2022/CMakeFiles/edit_cache.dir
+/home/zsq259/home/Python-Interpreter-2022/CMakeFiles/rebuild_cache.dir

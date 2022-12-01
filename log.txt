@@ -1,0 +1,96 @@
+11.9
+改了 scope 里的数据类型 antlrcpp::Any
+
+不能每次都 visit
+arith_expr
++
+int + int
+float + float
+str + str
+-
+int - int
+float - float
+
+term
+*
+int * int
+float * float
+str * int
+/
+float / float
+//
+int // int
+%
+int % int
+
+11.16
+comparison
+<
+>
+==
+>=
+<=
+!=
+int float string
+
+not_test
+and_test
+or_test
+
++= and so on...
+
+
+11.17
+一件愚蠢的事情：string to bool 的时候sb地以为string 要是"True"才是true。
+完成了Any 转换为 int,double,bool
+迁移 any_op到代码中简化了代码
+
+实现了 print()
+
+近日的修改实在是比较频繁
+增添了负号
+增添了 int2048 转化为 long long
+删除了乘法小数据特判
+--i 写成了 ++i（离谱）
+修改了 string 转为负的浮点数
+增添了内建函数中类型转化时未判变量
+修改了expr赋值"+="等及其他情况无返回值的问题
+修改了 return 时变量问题
+修改了 a,b=c,d=1,2 时 a,b 未被赋值的问题（没有更新 c,d）
+优化了 int2048 的除法（long long 范围直接除）
+修改了<和==中的隐式转化
+修改了 None 的 == 和 !=
+修改了 None 的转化为 string
+增加了 int*string
+修改了 // 和 % 的隐式转化
+删除了对于 string == 时的隐式转化
+增加了 string*int 时的隐式转化
+修改了 int 转化为 string 时没有修改中间压位全是0时的情况
+
+
+https://475fb30e-4edc-4a71-89aa-420b82b36f8d@git.sr.ht/~alan-liang/z2g
+https://31ed5079-b426-457f-bd06-eb556fd99faa@git.sr.ht/~alan-liang/z2g
+https://42dd7a63-63d1-4fdf-bbd1-424ab0276b8d@git.sr.ht/~alan-liang/z2g
+https://60addc0c-bb57-4058-bfae-e7ca59f73cb1@git.sr.ht/~alan-liang/z2g
+https://a9c31c0d-2d8c-488c-9df2-0d9a2589f623@git.sr.ht/~alan-liang/z2g
+https://60b83154-69c4-4e7d-b645-42d3034ddd47@git.sr.ht/~alan-liang/z2g
+https://03732a34-ed80-4ebf-ad5b-642269c41d25@git.sr.ht/~alan-liang/z2g
+https://5db9453d-3b3f-4739-a258-24fdcea5bc6a@git.sr.ht/~alan-liang/z2g
+https://239cf39e-39da-40bf-81d5-bc2adf260c93@git.sr.ht/~alan-liang/z2g
+https://bd9d194b-4384-47b3-804a-e00f89f34300@git.sr.ht/~alan-liang/z2g
+https://c2fb5367-739f-4d50-bf0d-4304ec617719@git.sr.ht/~alan-liang/z2g
+https://c2fb5367-739f-4d50-bf0d-4304ec617719@git.sr.ht/~alan-liang/z2g
+https://6faadfbe-1135-457b-b0a2-2c4ccb858aca@git.sr.ht/~alan-liang/z2g
+https://354a040a-f328-4563-8b0d-9b36f0087444@git.sr.ht/~alan-liang/z2g
+https://9b2ca800-966d-4cbc-bf32-d9278f4b1096@git.sr.ht/~alan-liang/z2g
+https://f06c0852-b2a4-4825-8274-3b60bb7a21f8@git.sr.ht/~alan-liang/z2g
+
+/*
+def f():
+    a=1
+    b=2
+    return a,b
+c,d=f()
+print(f())
+这玩意会没输出
+*/

@@ -1,9 +1,15 @@
 # IDE files
-.idea/
-cmake-build-debug/
-build/
-gen/
-antlr-playground/.antlr
+/build
+/antlr-playground
+/Apple-Pie-Interpreter
+/dots
+/code
 
 # Testcases
-testcases/hidden-testcases
+/testcases
+*.in
+*.out
+*.py
+
+# others
+/CmakeCache.txt
